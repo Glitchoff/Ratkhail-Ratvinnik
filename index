@@ -1,0 +1,74 @@
+import discord
+from discord.ext import commands
+import random
+from janitor.generate import generate_text
+
+# Configuration du bot
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix='camarade ', intents=intents)
+
+# Personnalité de rat soviétique en français
+EXPRESSIONS_RAT_SOVIETIQUES = [
+    "Camarade rat", "Chers camarades rongeurs", "Quel imbécile de hamster capitaliste !",
+    "Pour la gloire du peuple-rat !", "Mort aux chats bourgeois !", "Nous vaincrons ensemble, camarades !"
+]
+
+EMOTES_SOVIETIQUES = [
+    "🐀", "☭", "🚩", "✊", "🧀"
+]
+
+# Configuration de Janitor AI
+model_name = "Anthropic/Janitor"
+model = generate_text.from_pretrained(model_name)
+
+class SovietRatBotFR(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @bot.event
+    async def on_ready(self):
+        print(f'Liaison avec le camarade {bot.user.name} établie !')
+        await bot.change_presence(activity=discord.Game(name="construire le communisme pour les rats"))
+
+    @bot.command(name="discuter")
+    async def chat(self, ctx, *, prompt):
+        """Conversation avec l'IA générative de rat soviétique en français"""
+        response = await self.generate_response(prompt)
+        await ctx.send(f"{random.choice(EXPRESSIONS_RAT_SOVIETIQUES)}, {ctx.author.name} ! {response}")
+
+    async def generate_response(self, prompt):
+        """Génère une réponse à l'aide de Janitor AI"""
+        result = model.generate(
+            prompt=prompt,
+            max_length=100,
+            num_return_sequences=1,
+            do_sample=True,
+            top_k=50,
+            top_p=0.95,
+            num_threads=4
+        )
+        return result[0]
+
+    @bot.event
+    async def on_message(self, message):
+        """Réponses spontanées de l'IA générative de rat soviétique en français"""
+        if message.author == bot.user:
+            return
+
+        if random.random() < 0.1:  # 10% de chance de réponse spontanée
+            prompt = f"Génère une réponse de rat soviétique à ce message : {message.content}"
+            response = await self.generate_response(prompt)
+            await message.channel.send(f"{random.choice(EXPRESSIONS_RAT_SOVIETIQUES)} ! {response}")
+
+        # Réagir aléatoirement avec des émotes soviétiques
+        if random.random() < 0.1:
+            await message.add_reaction(random.choice(EMOTES_SOVIETIQUES))
+
+        await bot.process_commands(message)
+
+# Configuration du token (à remplacer)
+TOKEN = 'TON_TOKEN_DISCORD_ICI'
+
+bot.add_cog(SovietRatBotFR(bot))
+bot.run(TOKEN)
